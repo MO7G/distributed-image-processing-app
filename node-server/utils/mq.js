@@ -2,8 +2,10 @@ import amqp from 'amqplib';
 
 const publishTask = async (imageObjects) => {
   try {
-      const connection = await amqp.connect('amqp://localhost');
-      const channel = await connection.createChannel();
+    console.log('adsf')
+    const connection = await amqp.connect('amqp://macbook');
+
+    const channel = await connection.createChannel();
       await channel.assertQueue('process_images', { durable: false });
 
       // Convert imageObjects to JSON string

@@ -5,7 +5,7 @@ import sessionStore from './sessionStore.js';
 
 async function listenToQueue() {
     try {
-        const connection = await amqp.connect('amqp://localhost'); // Connect to the message queue service
+        const connection = await amqp.connect('amqp://macbook'); // Connect to the message queue service
         const channel = await connection.createChannel(); // Create a channel
         const queueName = 'finished_processing'; // Specify the queue name
 

@@ -12,6 +12,8 @@ def run_bash_script():
         # Handle any errors that occur during script execution
         print("Error running Bash script:", e)
 
+    while True:
+        pass;
 
 if __name__ == "__main__":
     run_bash_script()

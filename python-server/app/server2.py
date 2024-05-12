@@ -23,7 +23,7 @@ class TaskProcessor(Thread):
             # Convert the received message from JSON
             task = json.loads(self.body)
             print(" [x] Received task:", task)
-            self.constructObject(task)
+            #self.constructObject(task)
 
 
 
@@ -39,9 +39,11 @@ class TaskProcessor(Thread):
         finally:
             # Close the connection
             connection.close()
+    
+    def createFolder(self):
+    
+    
 
-
-    def constructObject(self , task):
         image_array_uuid = task['imageArrayUUID']
         print("Image Array UUID:", image_array_uuid)
 
@@ -60,7 +62,7 @@ class TaskProcessor(Thread):
         
 
 # Define the RabbitMQ connection parameters
-connection_params = pika.ConnectionParameters('localhost')
+connection_params = pika.ConnectionParameters('macbook')
 
 def callback(ch, method, properties, body):
     # Create and start a new TaskProcessor thread for each message
