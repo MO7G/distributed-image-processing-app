@@ -2,19 +2,28 @@ import React, { useState, useEffect } from "react";
 
 const ImagesComponent = ({ imagesProp }) => {
   const [images, setImages] = useState([]);
-  const [downloadEnabled, setDownloadEnabled] = useState(false); // State to manage download button
+  const [downloadEnabledMap, setDownloadEnabledMap] = useState({}); // Map to track enabled download buttons
 
   useEffect(() => {
     // Check if imagesProp is an array
     if (Array.isArray(imagesProp)) {
-      // Convert File objects to URLs
-      const imageUrls = imagesProp.map(image => URL.createObjectURL(image));
-      // Update images state with the URLs
+      // Convert each image object to a URL and update images state
+      const imageUrls = imagesProp.map(image => ({
+        id: image.id,
+        url: URL.createObjectURL(image.file)
+      }));
       setImages(imageUrls);
+
+      // Initialize downloadEnabledMap with false for each image ID
+      const initialDownloadEnabledMap = {};
+      imageUrls.forEach(image => {
+        initialDownloadEnabledMap[image.id] = false;
+      });
+      setDownloadEnabledMap(initialDownloadEnabledMap);
 
       // Cleanup function to revoke the object URLs when component unmounts
       return () => {
-        imageUrls.forEach(url => URL.revokeObjectURL(url));
+        imageUrls.forEach(image => URL.revokeObjectURL(image.url));
       };
     }
   }, [imagesProp]);
@@ -26,15 +35,16 @@ const ImagesComponent = ({ imagesProp }) => {
     }
   };
 
-  const handleDownload = (imageUrl) => {
+  const handleDownload = (imageId) => {
     // Perform download logic here
-    console.log("Downloading:", imageUrl);
+    console.log("Downloading:", imageId);
   };
 
-  // Function to unlock the download button based on some condition
-  const unlockDownload = () => {
-    // Perform unlocking logic here
-    setDownloadEnabled(true);
+  const toggleDownload = (imageId) => {
+    setDownloadEnabledMap(prevState => ({
+      ...prevState,
+      [imageId]: !prevState[imageId] // Toggle the state for the specified image ID
+    }));
   };
 
   return (
@@ -48,20 +58,27 @@ const ImagesComponent = ({ imagesProp }) => {
             <div className="card-body">
               <div className="row">
                 {/* Map over the images array and render an img tag for each image */}
-                {images.map((imageUrl, index) => (
+                {images.map((image, index) => (
                   <div key={index} className="col-lg-3 mb-3">
                     <img
-                      src={imageUrl}
+                      src={image.url}
                       alt={`Image ${index}`} // Set alt text appropriately
                       style={{ width: "100%", height: "auto" }} // Set image size
                     />
-                    {/* Download button, initially disabled */}
+                    {/* Download button */}
                     <button
-                      onClick={() => handleDownload(imageUrl)}
-                      disabled={!downloadEnabled}
+                      onClick={() => handleDownload(image)}
+                      disabled={!downloadEnabledMap[image.id]} // Disable or enable the button based on downloadEnabledMap
                       className="btn btn-primary mt-2"
                     >
                       Download
+                    </button>
+                    {/* Button to toggle download button for this image */}
+                    <button
+                      onClick={() => toggleDownload(image.id)}
+                      className="btn btn-success mt-2 ms-2"
+                    >
+                      {downloadEnabledMap[image.id] ? "Disable Download" : "Enable Download"}
                     </button>
                   </div>
                 ))}
@@ -72,9 +89,6 @@ const ImagesComponent = ({ imagesProp }) => {
       </div>
       <button onClick={handlePrint} className="btn btn-secondary me-2">
         Print First Image URL
-      </button>
-      <button onClick={unlockDownload} className="btn btn-success">
-        Unlock Download
       </button>
     </div>
   );

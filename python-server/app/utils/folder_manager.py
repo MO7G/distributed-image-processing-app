@@ -15,7 +15,7 @@ class FolderManager:
         folder_path = os.path.join(self.base_path, folder_uuid)
         os.makedirs(folder_path)
 
-        return folder_path
+        return folder_path + '/'
 
     def delete_folder_with_uuid(self, folder_uuid):
         folder_path = os.path.join(self.base_path, folder_uuid)
@@ -47,4 +47,4 @@ class FolderManager:
             if os.path.isdir(entry_path):
                 folders.append(entry)
         return folders
-
+    

@@ -7,8 +7,7 @@ class CommandRunner:
         self.file_path = file_path
 
     def run_mpi_command(self, args):
-        directory = os.path.dirname(self.file_path)
-        command = ["mpirun" ,"-np" , "4", os.path.join(directory, "filter.py")] + args
+        command = ["mpirun" ,"-np" , "4", self.file_path ] + args
         process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         output, error = process.communicate()
@@ -35,5 +34,5 @@ class CommandRunner:
 if __name__ == "__main__":
     current_file_path = os.path.abspath(__file__)
     runner = CommandRunner("/home/mohd/Desktop/sharedFolder")
-    x = runner.run_filter(["hello"])
+    x = runner.run_filter(["hello"])    
 

@@ -16,13 +16,13 @@ class WorkerThread(threading.Thread):
         while True:
             task = self.task_queue.get()
             if task is None:
-                print(f"Rank {self.rank}, Thread {self.name} is done.")
+                #print(f"Rank {self.rank}, Thread {self.name} is done.")
                 break  # Exit the loop if termination signal is received
             # Unpack the task
             image, operation = task
             # Process the image
             result = self.process_image(image, operation)
-            print(f"Thread {self.name} done processing {image} with {operation}.")
+            #print(f"Thread {self.name} done processing {image} with {operation}.")
             # Add the result to the result queue
             self.result_queue.put(result)
 
@@ -83,12 +83,12 @@ def main():
             result = local_result_queue.get()
             filename = f"result_{i}.jpg"
             cv2.imwrite(filename, result)
-            print(f"Result saved to {filename}")
+            #print(f"Result saved to {filename}")
             i += 1
 
         end_time = time.time()  # Record the end time
         execution_time = end_time - start_time  # Calculate the execution time
-        print(f"Execution time: {execution_time} seconds helloe")
+        #print(f"Execution time: {execution_time} seconds helloe")
 
 
 
@@ -109,7 +109,7 @@ def main():
 
                 end_index = start_index + num_of_task_for_current_process;
                 subtasks = task_queue[start_index:end_index]
-                print(f"Sending tasks {subtasks} to worker node {dest}")
+                #print(f"Sending tasks {subtasks} to worker node {dest}")
                 MPI.COMM_WORLD.send(subtasks, dest=dest)
                 start_index = end_index
 
@@ -128,16 +128,16 @@ def main():
             for i, result in enumerate(results):
                 filename = f"result_{i}.jpg"
                 cv2.imwrite(filename, result)
-                print(f"Result saved to {filename}")
+                #print(f"Result saved to {filename}")
 
             end_time = time.time()  # Record the end time
             execution_time = end_time - start_time  # Calculate the execution time
-            print(f"Execution time: {execution_time} seconds helloe")
+            #print(f"Execution time: {execution_time} seconds helloe")
 
 
         else:
             # Worker nodes
-            print(f"Rank {rank} entered the worker node block.")
+            #print(f"Rank {rank} entered the worker node block.")
             # Create a task queue and a result queue
             task_queue = queue.Queue()
             result_queue = queue.Queue()
@@ -145,7 +145,7 @@ def main():
             num_threads = 1  # Example: Adjust the number of threads as needed
             # Listen for tasks from the master node
             tasks = MPI.COMM_WORLD.recv(source=0)
-            print(f"Rank {rank} received task: {tasks}")
+            #print(f"Rank {rank} received task: {tasks}")
             # Add the task to the task queue
             for task in tasks:
                 task_queue.put(task)

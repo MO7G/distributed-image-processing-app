@@ -1,29 +1,55 @@
 import React, { useState, useRef } from "react";
 import axios from "axios";
 import ImagesComponent from "../Images/images";
+import { v4 as uuidv4 } from 'uuid';
 
 const ImageUpload = () => {
   const [image, setImage] = useState("");
-  const [selectedOption, setSelectedOption] = useState(""); // State to hold the selected option
+  const [selectedOption, setSelectedOption] = useState("blurring"); // State to hold the selected option
   const [responseMsg, setResponseMsg] = useState({
     status: "",
     message: "",
     error: "",
   });
   const [fileError, setFileError] = useState(""); // State to hold file selection error
+  const delimiter = '~!~';
 
   const handleChange = (e) => {
-    const imagesArray = [];
+    const imagesWithIds = [];
     for (let i = 0; i < e.target.files.length; i++) {
-      fileValidate(e.target.files[i]);
-      imagesArray.push(e.target.files[i]);
-    }
-    setImage(imagesArray);
-  };
+      const file = e.target.files[i];
+      const id = uuidv4() + delimiter + selectedOption; // Generate a unique ID for each file
+      fileValidate(file);
+      const renamedFile = new File([file], id, { type: file.type }); // Create a new File object with the modified name
+  
+        
+      imagesWithIds.push({ id: id, file: renamedFile }); // Push the file object with id to imagesWithIds array
+  }
+  
+    console.log("This is the array of images with IDs", imagesWithIds);
+    setImage(imagesWithIds);
+};
 
-  const handleOptionChange = (e) => {
-    setSelectedOption(e.target.value); // Update selected option state
-  };
+
+  
+
+const handleOptionChange = (e) => {
+  const newSelectedOption = e.target.value;
+  const updatedImages = image.map(image => {
+    const [id, currentOperation] = image.id.split('~!~');
+      const newId = `${id}~!~${newSelectedOption}`;
+      const newFileName = `${id}~!~${newSelectedOption}`;
+      const newFile = new File([image.file], newFileName);
+      return {
+        id: newId,
+        file: newFile
+      }
+  });
+
+  setImage(updatedImages);
+  setSelectedOption(newSelectedOption);
+};
+
 
   const submitHandler = (e) => {
     e.preventDefault();
@@ -36,9 +62,12 @@ const ImageUpload = () => {
 
     const data = new FormData();
     for (let i = 0; i < image.length; i++) {
-      data.append("files[]", image[i]);
+      console.log(image[i])
+      data.append("files[]", image[i].file);
     }
 
+
+    console.log("this is the data " , data)
     axios.post("http://127.0.0.1:5000/upload", data)
       .then((response) => {
         if (response.status === 201) {
@@ -93,10 +122,9 @@ const ImageUpload = () => {
           <div className="mb-3">
             <label htmlFor="options" className="form-label">Select an option:</label>
             <select className="form-select" id="options" value={selectedOption} onChange={handleOptionChange}>
-              <option value="">Select...</option>
-              <option value="x">Option X</option>
-              <option value="y">Option Y</option>
-              <option value="z">Option Z</option>
+              <option value="blurring">blurring</option>
+              <option value="edge_detection">edge_detection</option>
+              <option value="other_operation">other_operation</option>
             </select>
           </div>
 
@@ -139,6 +167,7 @@ const ImageUpload = () => {
       </div>
 
       <ImagesComponent imagesProp={image} ref={childRef}/>
+      <button onClick={()=>console.log(image)}>dooooo</button>
     </div>
   );
 };
