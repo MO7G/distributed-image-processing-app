@@ -57,6 +57,7 @@ def upload_file():
     folder_manager= FolderManager(PATH_OF_SHARED_FOLDER);
     folder_name = str(uuid.uuid4())
     path_of_new_folder = folder_manager.create_folder_with_uuid(folder_name);
+    folder_manager.create_result_folder(folder_name)
     print(path_of_new_folder)
 
     operation_type = "";

@@ -17,6 +17,11 @@ class FolderManager:
 
         return folder_path + '/'
 
+    def create_result_folder(self, folder_uuid):
+        
+        folder_path = os.path.join(self.base_path, folder_uuid,"result")
+        os.makedirs(folder_path)
+
     def delete_folder_with_uuid(self, folder_uuid):
         folder_path = os.path.join(self.base_path, folder_uuid)
         
