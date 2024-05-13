@@ -3,21 +3,14 @@ import os
 import urllib.request
 from werkzeug.utils import secure_filename #pip install Werkzeug
 from flask_cors import CORS #ModuleNotFoundError: No module named 'flask_cors' = pip install Flask-Cors
-from flask_marshmallow import Marshmallow #ModuleNotFoundError: No module named 'flask_marshmallow' = pip install flask-marshmallow https://pypi.org/project/flask-marshmallow/
  
-from models import db, Image
  
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
  
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///flaskdb.db'
-# Databse configuration mysql                             Username:password@hostname/databasename
-#app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:''@localhost/flaskreact'
- 
-db.init_app(app)
+
+
   
-with app.app_context():
-    db.create_all()
  
 UPLOAD_FOLDER = 'static/uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -91,8 +84,3 @@ def upload_file():
         resp.status_code = 500
         return resp
      
-@app.route('/images',methods =['GET'])
-def images():
-    all_images = Image.query.all()
-    results = image_schema.dump(all_images)
-    return jsonify(results)
