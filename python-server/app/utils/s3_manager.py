@@ -26,11 +26,7 @@ class S3FileManager:
 
     def upload_image(self,folder_name , s3_key):
         try:
-
-            print(folder_name)
-            print(s3_key)
-            local_image_path = os.path.join(self.upload_directory, folder_name, s3_key)
-            print(local_image_path)
+            local_image_path = os.path.join(self.upload_directory, folder_name)
             self.s3.upload_file(local_image_path, self.bucket_name, s3_key)
             print(f"Image uploaded successfully to S3 with key: {s3_key}")
         except Exception as e:
@@ -46,14 +42,22 @@ class S3FileManager:
         except Exception as e:
             print(f"Error downloading image from S3: {e}")
 
-# Example usage:
-s3_file_manager = S3FileManager()
+    def generate_presigned_url(self, object_key, expiration_time=3600):
+        """
+        Generate a presigned URL for accessing an S3 object.
 
-# Upload image to S3
-#local_image_path = "/home/mohd/Desktop/sharedFolder/temp/image.jpg"
-s3_key = "haha.jpg"
-#s3_file_manager.upload_image(local_image_path, s3_key)
+        :param object_key: Key of the S3 object.
+        :param expiration_time: Expiration time of the presigned URL in seconds (default: 3600 seconds).
+        :return: Presigned URL.
+        """
+        try:
+            # Generate the presigned URL
+            presigned_url = self.s3.generate_presigned_url(
+                'get_object',
+                Params={'Bucket': self.bucket_name, 'Key': object_key},
+                ExpiresIn=expiration_time
+            )
+            return presigned_url
+        except Exception as e:
+            print(f"Error generating presigned URL: {e}")
 
-# Download image from S3
-#s3_file_manager.download_image(s3_key)
-s3_file_manager.download_image("man",s3_key)

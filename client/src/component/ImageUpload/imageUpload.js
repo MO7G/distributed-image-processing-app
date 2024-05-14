@@ -2,15 +2,22 @@ import React, { useState, useRef } from "react";
 import axios from "axios";
 import ImagesComponent from "../Images/images";
 import { v4 as uuidv4 } from 'uuid';
+import { zoomies } from 'ldrs'
+
+
+
+// Default values shown
 
 const ImageUpload = () => {
+  zoomies.register()
   const [image, setImage] = useState("");
-  const [selectedOption, setSelectedOption] = useState("blurring"); // State to hold the selected option
+  const [selectedOption, setSelectedOption] = useState("edge_detection"); // State to hold the selected option
   const [responseMsg, setResponseMsg] = useState({
     status: "",
     message: "",
     error: "",
   });
+  const [flagStartUpload, setFlagStartUpload] = useState(true)
   const [fileError, setFileError] = useState(""); // State to hold file selection error
   const delimiter = '~!~';
 
@@ -21,22 +28,22 @@ const ImageUpload = () => {
       const id = uuidv4() + delimiter + selectedOption; // Generate a unique ID for each file
       fileValidate(file);
       const renamedFile = new File([file], id, { type: file.type }); // Create a new File object with the modified name
-  
-        
+
+
       imagesWithIds.push({ id: id, file: renamedFile }); // Push the file object with id to imagesWithIds array
-  }
-  
+    }
+
     console.log("This is the array of images with IDs", imagesWithIds);
     setImage(imagesWithIds);
-};
+  };
 
 
-  
 
-const handleOptionChange = (e) => {
-  const newSelectedOption = e.target.value;
-  const updatedImages = image.map(image => {
-    const [id, currentOperation] = image.id.split('~!~');
+
+  const handleOptionChange = (e) => {
+    const newSelectedOption = e.target.value;
+    const updatedImages = image.map(image => {
+      const [id, currentOperation] = image.id.split('~!~');
       const newId = `${id}~!~${newSelectedOption}`;
       const newFileName = `${id}~!~${newSelectedOption}`;
       const newFile = new File([image.file], newFileName);
@@ -44,11 +51,11 @@ const handleOptionChange = (e) => {
         id: newId,
         file: newFile
       }
-  });
+    });
 
-  setImage(updatedImages);
-  setSelectedOption(newSelectedOption);
-};
+    setImage(updatedImages);
+    setSelectedOption(newSelectedOption);
+  };
 
 
   const submitHandler = (e) => {
@@ -62,12 +69,9 @@ const handleOptionChange = (e) => {
 
     const data = new FormData();
     for (let i = 0; i < image.length; i++) {
-      console.log(image[i])
       data.append("files[]", image[i].file);
     }
 
-
-    console.log("this is the data " , data)
     axios.post("http://127.0.0.1:5000/upload", data)
       .then((response) => {
         if (response.status === 201) {
@@ -75,15 +79,18 @@ const handleOptionChange = (e) => {
             status: response.data.status,
             message: response.data.message,
           });
-          setTimeout(() => {
-            setImage("");
-            setResponseMsg("");
-          }, 10000);
-          document.querySelector("#imageForm").reset();
-          // getting uploaded images
-          childRef.current.getImages();
+
+          console.log("this sithe reuslt ", response.data.result);
+          // Update the state to include the image URLs received from the backend response
+          const updatedImages = image.map((imageItem) => {
+            // Assuming response.data.result contains the URLs as provided in the backend response
+            const imageURL = response.data.result[imageItem.id + '.png'];
+            // Just set the imageURL directly to the imageItem
+            return { ...imageItem, imageURL };
+          });
+
+          setImage(updatedImages);
         }
-        console.log(response.data.message)
       })
       .catch((error) => {
         console.error(error);
@@ -97,6 +104,7 @@ const handleOptionChange = (e) => {
         }
       });
   };
+
 
   const fileValidate = (file) => {
     if (
@@ -121,11 +129,12 @@ const handleOptionChange = (e) => {
           {/* Options */}
           <div className="mb-3">
             <label htmlFor="options" className="form-label">Select an option:</label>
-            <select className="form-select" id="options" value={selectedOption} onChange={handleOptionChange}>
-              <option value="blurring">blurring</option>
+            <select className="form-select" id="options" value={selectedOption} onChange={handleOptionChange} disabled={image.length === 0}>
               <option value="edge_detection">edge_detection</option>
-              <option value="other_operation">other_operation</option>
+              <option value="color_inversion">color inversion</option>
+              <option value="increase_brightness">increase brightness</option>
             </select>
+
           </div>
 
           {/* Image Upload Form */}
@@ -145,11 +154,25 @@ const handleOptionChange = (e) => {
                 </div>
               </div>
 
-              <div className="card-footer text-end">
-                <button type="submit" className="btn btn-success">
-                  Upload
-                </button>
+              <div className="card-footer d-flex justify-content-between align-items-center">
+                <div>
+                  {flagStartUpload && (
+                    <l-zoomies
+                      size="700"
+                      stroke="5"
+                      bg-opacity="0.1"
+                      speed="00.4"
+                      color="black"
+                    ></l-zoomies>
+                  )}
+                </div>
+                <div>
+                  <button type="submit" className="btn btn-success">
+                    Upload
+                  </button>
+                </div>
               </div>
+
             </div>
           </form>
         </div>
@@ -165,9 +188,7 @@ const handleOptionChange = (e) => {
           )}
         </div>
       </div>
-
-      <ImagesComponent imagesProp={image} ref={childRef}/>
-      <button onClick={()=>console.log(image)}>dooooo</button>
+      <ImagesComponent imagesProp={image} ref={childRef} />
     </div>
   );
 };

@@ -5,8 +5,10 @@ from werkzeug.datastructures import ImmutableMultiDict
 import uuid
 from utils.config import *
 from utils.folder_manager import FolderManager
-from utils.command_runner import CommandRunner
-
+from scripts.python_subprocess import run_command_with_subprocess
+from utils.s3_manager import S3FileManager
+from utils.folder_manager import FolderNavigator
+s3 = S3FileManager()
 UPLOAD_FOLDER = 'static/installedImages'  # Define the directory to store uploaded images
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
@@ -20,17 +22,27 @@ def is_valid_filename(filename):
         try:
             uuid.UUID(parts[0], version=4)
             # Check if the second part is a valid operation type
-            if parts[1] in {'blurring', 'edge_detection', 'other_operation'}:  # Add more operation types if needed
+            if parts[1] in {'color_inversion', 'edge_detection', 'increase_brightness'}:  # Add more operation types if needed
                 return True
         except ValueError:
             pass
     return False
 
-def run_mpi(folder_name):
-    command_runner = CommandRunner(PATH_OF_MPI_CODE)
-    complex = command_runner.run_mpi_command([folder_name])
-    print("this is the complex")
+def upload_to_s3(folder_name , ):
+    folder_nav = FolderNavigator();
 
+    print("okay this is me " , folder_name)
+    images_with_url = {}
+
+    list = folder_nav.list_files_in_folder_results(folder_name)
+    for image in list:
+       s3.upload_image(folder_name + "/" +"result/" + image ,image)
+       link = s3.generate_presigned_url(image)
+       images_with_url[image] = link
+
+    return images_with_url;
+
+   
 
 
 def upload_file():
@@ -81,12 +93,14 @@ def upload_file():
             })
             return resp
     
-    #run_mpi(path_of_new_folder)
+    run_command_with_subprocess(folder_name, operation_type);
+    result = upload_to_s3(folder_name);
 
     if success:
         resp = jsonify({
             "message": 'Files successfully uploaded',
-            "status": 'successs'
+            "status": 'successs',
+            "result" : result
         })
         resp.status_code = 201
         return resp

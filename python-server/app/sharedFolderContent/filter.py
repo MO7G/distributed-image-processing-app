@@ -3,8 +3,12 @@ import cv2
 import threading
 import queue
 import time
+import subprocess
+import re
+import sys
 from folder_navigator import FolderNavigator
 path_to_DownloadedImages = "/home/mohd/Desktop/sharedFolder/DownloadedImages/"
+import socket
 
 class WorkerThread(threading.Thread):
     def __init__(self, task_queue,folder_name,rank=0):
@@ -17,13 +21,13 @@ class WorkerThread(threading.Thread):
         while True:
             task = self.task_queue.get()
             if task is None:
-                #print(f"Rank {self.rank}, Thread {self.name} is done.")
+                print(f"Rank {self.rank}, Thread {self.name} is done.")
                 break  # Exit the loop if termination signal is received
             # Unpack the task
             image, operation = task
             # Process the image
             result = self.process_image(image, operation)
-            #print(f"Thread {self.name} done processing {image} with {operation}.")
+            print(f"Thread {self.name} done processing {image} with {operation}.")
             # Add the result to the result queue
 
             image_path = self.dist_folder + "result" + "/" + image + '.png';
@@ -51,7 +55,18 @@ class WorkerThread(threading.Thread):
         result = cv2.cvtColor(final_hsv, cv2.COLOR_HSV2BGR)
         return result
 
+import netifaces as ni
 
+def get_default_interface_ip():
+    # Get default gateway information
+    gateways = ni.gateways()
+    default_gateway = gateways['default']
+    
+    # Get the IP address of the interface associated with the default gateway
+    default_interface = default_gateway[ni.AF_INET][1]
+    ip_address = ni.ifaddresses(default_interface)[ni.AF_INET][0]['addr']
+    
+    return ip_address
 
 
 
@@ -59,7 +74,6 @@ def main(task_queue,folder_name):
     start_time = time.time()
     rank = MPI.COMM_WORLD.Get_rank()
     size = MPI.COMM_WORLD.Get_size()
-    print(task_queue);
     # in case one process is running only then we are going to process locally here in the master node
     if size == 1:
         # Create a task queue and a result queue
@@ -90,7 +104,7 @@ def main(task_queue,folder_name):
 
         end_time = time.time()  # Record the end time
         execution_time = end_time - start_time  # Calculate the execution time
-        #print(f"Execution time: {execution_time} seconds helloe")
+        print(f"Execution time: {execution_time} seconds helloe")
 
 
 
@@ -99,6 +113,11 @@ def main(task_queue,folder_name):
         if rank == 0:
             # Master node
             task_queue_size = task_queue.qsize()
+            array_of_sub_queue = [];
+            while not task_queue.empty():
+                temp = task_queue.get();
+                array_of_sub_queue.append(temp);
+            
             tasks_per_process = task_queue_size // (size - 1)
             remainder = task_queue_size % (size - 1)
 
@@ -110,31 +129,25 @@ def main(task_queue,folder_name):
                     num_of_task_for_current_process = tasks_per_process;
 
                 end_index = start_index + num_of_task_for_current_process;
-                subtasks = task_queue[start_index:end_index]
-                #print(f"Sending tasks {subtasks} to worker node {dest}")
+                subtasks = array_of_sub_queue[start_index:end_index]
+                print(f"Sending tasks {subtasks} to worker node {dest}")
                 MPI.COMM_WORLD.send(subtasks, dest=dest)
                 start_index = end_index
 
-            # Receive and handle results from worker nodes
-            results = []
             for _ in range(size - 1):
                 received_data = MPI.COMM_WORLD.recv(source=MPI.ANY_SOURCE)
-                if isinstance(received_data, list):
-                    # If received data is a list, assume it contains multiple images
-                    results.extend(received_data)
-                else:
-                    # If received data is not a list, assume it's a single image
-                    results.append(received_data)
 
 
             end_time = time.time()  # Record the end time
             execution_time = end_time - start_time  # Calculate the execution time
-            #print(f"Execution time: {execution_time} seconds helloe")
+            print(f"Execution time: {execution_time} seconds helloe")
 
 
         else:
+
+            hostname = get_default_interface_ip();
             # Worker nodes
-            #print(f"Rank {rank} entered the worker node block.")
+            print(f"Rank {rank} with ip {hostname} entered the worker node block.")
             # Create a task queue and a result queue
             task_queue = queue.Queue()
 
@@ -142,7 +155,7 @@ def main(task_queue,folder_name):
             num_threads = 1  # Example: Adjust the number of threads as needed
             # Listen for tasks from the master node
             tasks = MPI.COMM_WORLD.recv(source=0)
-            #print(f"Rank {rank} received task: {tasks}")
+            print(f"Rank {rank} received task: {tasks}")
             # Add the task to the task queue
             for task in tasks:
                 task_queue.put(task)
@@ -166,7 +179,8 @@ def main(task_queue,folder_name):
 
 
 
-if __name__ == "__main__":
+def test():
+    #if __name__ == "__main__":
     folder_name = "913afd92-dd7c-4b42-8139-9a85f93333ce"
     operation = "color_inversion"
     folder_nav = FolderNavigator();
@@ -176,3 +190,21 @@ if __name__ == "__main__":
         task_queue.put((image_name, operation))
 
     main(task_queue , folder_name)
+
+
+
+if __name__ == "__main__":
+    # Get folder name and operation from command-line arguments
+    folder_name = sys.argv[1]
+    operation = sys.argv[2]
+    print("this is the foldername" , folder_name);
+    print("this is the operation " , operation);
+    
+    # Your existing code
+    folder_nav = FolderNavigator()
+    list_of_images = folder_nav.list_files_in_folder(folder_name)
+    task_queue = queue.Queue()
+    for image_name in list_of_images:
+        task_queue.put((image_name, operation))
+
+    main(task_queue, folder_name)

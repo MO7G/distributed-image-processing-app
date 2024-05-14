@@ -1,8 +1,10 @@
 import os
+import netifaces as ni
 
 class FolderNavigator:
     def __init__(self):
         self.current_path = os.getcwd() + '/DownloadedImages/'
+        self.another_path = os.path.dirname(os.path.abspath(__file__)) + '/DownloadedImages/'
 
     def navigate_to_folder(self, folder_name):
         folder_path = os.path.join(self.current_path, folder_name)
@@ -14,7 +16,9 @@ class FolderNavigator:
             return False
 
     def list_files_in_folder(self, folder_name):
-        dist_folder = os.path.join(self.current_path, folder_name)
+
+        dist_folder = os.path.join(self.another_path, folder_name)
+        
         print(dist_folder)
         
         # Get list of files in the specified folder, excluding the current file

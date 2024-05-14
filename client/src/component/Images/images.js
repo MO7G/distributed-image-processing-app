@@ -1,52 +1,82 @@
 import React, { useState, useEffect } from "react";
+import 'ldrs/ring'
+import { zoomies } from 'ldrs'
+import { newtonsCradle } from 'ldrs'
+
+
+// Default values shown
+
+// Default values shown
 
 const ImagesComponent = ({ imagesProp }) => {
   const [images, setImages] = useState([]);
-  const [downloadEnabledMap, setDownloadEnabledMap] = useState({}); // Map to track enabled download buttons
+  const [downloadEnabledMap, setDownloadEnabledMap] = useState({});
+  newtonsCradle.register()
 
   useEffect(() => {
-    // Check if imagesProp is an array
     if (Array.isArray(imagesProp)) {
-      // Convert each image object to a URL and update images state
-      const imageUrls = imagesProp.map(image => ({
-        id: image.id,
-        url: URL.createObjectURL(image.file)
-      }));
-      setImages(imageUrls);
+      // Update images state with imagesProp
+      setImages(imagesProp);
 
       // Initialize downloadEnabledMap with false for each image ID
       const initialDownloadEnabledMap = {};
-      imageUrls.forEach(image => {
+      imagesProp.forEach(image => {
         initialDownloadEnabledMap[image.id] = false;
       });
       setDownloadEnabledMap(initialDownloadEnabledMap);
-
-      // Cleanup function to revoke the object URLs when component unmounts
-      return () => {
-        imageUrls.forEach(image => URL.revokeObjectURL(image.url));
-      };
     }
   }, [imagesProp]);
 
   const handlePrint = () => {
-    // Just an example of handling images, you can modify this according to your needs
-    if (images.length > 0) {
-      console.log(images[0]); // Image URL
+    console.log("this is the image state ", imagesProp);
+  };
+
+  const handleDownload = async (imageId) => {
+    // Find the image object with the corresponding ID
+    const image = images.find(img => img.id === imageId);
+  
+    if (!image) {
+      console.error("Image not found");
+      return;
+    }
+  
+    try {
+      // If the image URL is available, initiate download
+      if (image.imageURL) {
+        // Create a new anchor element
+        const link = document.createElement('a');
+        link.href = image.imageURL;
+        link.setAttribute('download', `image_${imageId}`); // Set the download attribute
+  
+        // Simulate a click on the anchor element
+        document.body.appendChild(link);
+        link.click();
+  
+        // Remove the anchor element from the DOM
+        document.body.removeChild(link);
+      } else {
+        // If the image is from a file input, initiate download using Blob
+        const blob = new Blob([image.file]);
+        const url = URL.createObjectURL(blob);
+  
+        // Create a new anchor element
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `image_${imageId}`); // Set the download attribute
+  
+        // Simulate a click on the anchor element
+        document.body.appendChild(link);
+        link.click();
+  
+        // Remove the anchor element and revoke the Blob URL
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      }
+    } catch (error) {
+      console.error("Error downloading image:", error);
     }
   };
-
-  const handleDownload = (imageId) => {
-    // Perform download logic here
-    console.log("Downloading:", imageId);
-  };
-
-  const toggleDownload = (imageId) => {
-    setDownloadEnabledMap(prevState => ({
-      ...prevState,
-      [imageId]: !prevState[imageId] // Toggle the state for the specified image ID
-    }));
-  };
-
+  
   return (
     <div className="container pt-4">
       <div className="row">
@@ -57,29 +87,47 @@ const ImagesComponent = ({ imagesProp }) => {
             </div>
             <div className="card-body">
               <div className="row">
-                {/* Map over the images array and render an img tag for each image */}
                 {images.map((image, index) => (
                   <div key={index} className="col-lg-3 mb-3">
-                    <img
-                      src={image.url}
-                      alt={`Image ${index}`} // Set alt text appropriately
-                      style={{ width: "100%", height: "auto" }} // Set image size
-                    />
-                    {/* Download button */}
-                    <button
-                      onClick={() => handleDownload(image)}
-                      disabled={!downloadEnabledMap[image.id]} // Disable or enable the button based on downloadEnabledMap
-                      className="btn btn-primary mt-2"
-                    >
-                      Download
-                    </button>
-                    {/* Button to toggle download button for this image */}
-                    <button
-                      onClick={() => toggleDownload(image.id)}
-                      className="btn btn-success mt-2 ms-2"
-                    >
-                      {downloadEnabledMap[image.id] ? "Disable Download" : "Enable Download"}
-                    </button>
+                    {/* Conditional rendering based on imageURL */}
+                    <div style={{ position: "relative", width: "100%", height: "auto", marginBottom: "100px" }}>
+                      {image.imageURL ? (
+                        <>
+                          <img
+                            src={image.imageURL}
+                            alt={`Image ${index}`}
+                            style={{ width: "100%", height: "auto" }}
+                          />
+                          <button
+                            onClick={() => handleDownload(image.id)}
+                            className="btn btn-primary"
+                            style={{ position: "absolute", bottom: "10px", left: "50%", transform: "translateX(-50%)" }}
+                          >
+                            Download
+                          </button>
+                        </>
+                      ) : (
+                        <img
+                          src={URL.createObjectURL(image.file)}
+                          alt={`Image ${index}`}
+                          style={{ width: "100%", height: "auto" }}
+                        />
+                      )}
+                      {/* Conditional rendering of spinner */}
+                      {!image.imageURL && (
+                        <div style={{ display: "flex", justifyContent: "center", alignItems: "center", width: "100%", height: "100%", marginTop: "30px" }}>
+                          <div style={{ display: "flex", justifyContent: "center", alignItems: "center", width: "100%", height: "100%" }}>
+                            <l-newtons-cradle
+                              size="78"
+                              speed="1.4"
+                              color="black"
+                            ></l-newtons-cradle>
+
+                          </div>
+
+                        </div>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -87,9 +135,6 @@ const ImagesComponent = ({ imagesProp }) => {
           </div>
         </div>
       </div>
-      <button onClick={handlePrint} className="btn btn-secondary me-2">
-        Print First Image URL
-      </button>
     </div>
   );
 }
