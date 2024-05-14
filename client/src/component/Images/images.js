@@ -8,7 +8,7 @@ import { newtonsCradle } from 'ldrs'
 
 // Default values shown
 
-const ImagesComponent = ({ imagesProp }) => {
+const ImagesComponent = ({ imagesProp,flagStartUploadProps}) => {
   const [images, setImages] = useState([]);
   const [downloadEnabledMap, setDownloadEnabledMap] = useState({});
   newtonsCradle.register()
@@ -114,7 +114,7 @@ const ImagesComponent = ({ imagesProp }) => {
                         />
                       )}
                       {/* Conditional rendering of spinner */}
-                      {!image.imageURL && (
+                      {flagStartUploadProps && (
                         <div style={{ display: "flex", justifyContent: "center", alignItems: "center", width: "100%", height: "100%", marginTop: "30px" }}>
                           <div style={{ display: "flex", justifyContent: "center", alignItems: "center", width: "100%", height: "100%" }}>
                             <l-newtons-cradle

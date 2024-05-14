@@ -17,7 +17,8 @@ const ImageUpload = () => {
     message: "",
     error: "",
   });
-  const [flagStartUpload, setFlagStartUpload] = useState(true)
+  const [clearActive , setClearActive] = useState(true)
+  const [flagStartUpload, setFlagStartUpload] = useState(false)
   const [fileError, setFileError] = useState(""); // State to hold file selection error
   const delimiter = '~!~';
 
@@ -60,18 +61,20 @@ const ImageUpload = () => {
 
   const submitHandler = (e) => {
     e.preventDefault();
-
+    setClearActive(false)
+    setFlagStartUpload(true);
     // Check if no files are selected
     if (image.length === 0) {
       setFileError("Please select at least one file to upload.");
+      setFlagStartUpload(false); // Set flag to false here too
       return;
     }
-
+  
     const data = new FormData();
     for (let i = 0; i < image.length; i++) {
       data.append("files[]", image[i].file);
     }
-
+  
     axios.post("http://127.0.0.1:5000/upload", data)
       .then((response) => {
         if (response.status === 201) {
@@ -79,7 +82,7 @@ const ImageUpload = () => {
             status: response.data.status,
             message: response.data.message,
           });
-
+  
           console.log("this sithe reuslt ", response.data.result);
           // Update the state to include the image URLs received from the backend response
           const updatedImages = image.map((imageItem) => {
@@ -88,9 +91,11 @@ const ImageUpload = () => {
             // Just set the imageURL directly to the imageItem
             return { ...imageItem, imageURL };
           });
-
+  
           setImage(updatedImages);
         }
+        setFlagStartUpload(false);
+        setClearActive(true) // Set flag to false in the then block
       })
       .catch((error) => {
         console.error(error);
@@ -102,9 +107,22 @@ const ImageUpload = () => {
             });
           }
         }
+        setFlagStartUpload(false); // Set flag to false in the catch block
       });
   };
-
+  
+  const handleClear = () => {
+    // Clear the selected images
+    setImage([]);
+    // Reset the selected option to its default value
+    setSelectedOption("edge_detection");
+    // Reset the file input field
+    const fileInput = document.getElementById("images");
+    if (fileInput) {
+      fileInput.value = "";
+    }
+  };
+  
 
   const fileValidate = (file) => {
     if (
@@ -129,7 +147,7 @@ const ImageUpload = () => {
           {/* Options */}
           <div className="mb-3">
             <label htmlFor="options" className="form-label">Select an option:</label>
-            <select className="form-select" id="options" value={selectedOption} onChange={handleOptionChange} disabled={image.length === 0}>
+            <select className="form-select" id="options" value={selectedOption} onChange={handleOptionChange} disabled={image.length === 0 || flagStartUpload}>
               <option value="edge_detection">edge_detection</option>
               <option value="color_inversion">color inversion</option>
               <option value="increase_brightness">increase brightness</option>
@@ -161,13 +179,20 @@ const ImageUpload = () => {
                       size="700"
                       stroke="5"
                       bg-opacity="0.1"
-                      speed="00.4"
+                      speed="2.4"
                       color="black"
                     ></l-zoomies>
                   )}
+                  {clearActive && (
+                    <>
+                     <button disabled={flagStartUpload} onClick={handleClear}  className="btn btn-danger">
+                    Clear
+                  </button>
+                    </>
+                  )}
                 </div>
                 <div>
-                  <button type="submit" className="btn btn-success">
+                  <button disabled={flagStartUpload} type="submit" className="btn btn-success">
                     Upload
                   </button>
                 </div>
@@ -188,7 +213,7 @@ const ImageUpload = () => {
           )}
         </div>
       </div>
-      <ImagesComponent imagesProp={image} ref={childRef} />
+      <ImagesComponent imagesProp={image} flagStartUploadProps={flagStartUpload} ref={childRef} />
     </div>
   );
 };
