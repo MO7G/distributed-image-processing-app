@@ -9,7 +9,7 @@ from scripts.python_subprocess import run_command_with_subprocess
 from utils.s3_manager import S3FileManager
 from utils.folder_manager import FolderNavigator
 s3 = S3FileManager()
-UPLOAD_FOLDER = 'static/installedImages'  # Define the directory to store uploaded images
+
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
 def allowed_file(filename):
@@ -46,8 +46,6 @@ def upload_to_s3(folder_name , ):
 
 
 def upload_file():
-    
-    
     # check if the post request has the file part
     if 'files[]' not in request.files:
         resp = jsonify({
@@ -60,12 +58,9 @@ def upload_file():
    
   
     files = request.files.getlist('files[]')
-    print("this is the files ", files)
     errors = {}
     success = False
 
-    print("this is the files " , files)
-    
     folder_manager= FolderManager(PATH_OF_SHARED_FOLDER);
     folder_name = str(uuid.uuid4())
     path_of_new_folder = folder_manager.create_folder_with_uuid(folder_name);
@@ -75,7 +70,7 @@ def upload_file():
     operation_type = "";
     for file in files:      
         if file and allowed_file(file.filename):
-            if len(operation_type) is 0:
+            if len(operation_type) == 0:
                temp_file_name = file.filename
                _, operation_type = temp_file_name.split('~!~')
 
@@ -99,12 +94,12 @@ def upload_file():
     if success:
         resp = jsonify({
             "message": 'Files successfully uploaded',
-            "status": 'successs',
+            "status": 'success',
             "result" : result
         })
         resp.status_code = 201
         return resp
-    else:
+    else:           
         resp = jsonify({
             "message": 'Failed to upload files',
             "status": 'failed'
@@ -112,6 +107,3 @@ def upload_file():
         resp.status_code = 500
         return resp
 
-def hello():
-    run_mpi("8b43ff96-691d-48ef-8150-ba1162f9e3f4")
-    return jsonify({"message": "Hello, upload successful!"})

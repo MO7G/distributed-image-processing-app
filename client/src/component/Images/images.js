@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import 'ldrs/ring'
 import { zoomies } from 'ldrs'
-import { newtonsCradle } from 'ldrs'
-
+import { newtonsCradle }   from 'ldrs'
+import './Images.css'
 
 // Default values shown
 
@@ -101,7 +101,7 @@ const ImagesComponent = ({ imagesProp,flagStartUploadProps}) => {
                           <button
                             onClick={() => handleDownload(image.id)}
                             className="btn btn-primary"
-                            style={{ position: "absolute", bottom: "10px", left: "50%", transform: "translateX(-50%)" }}
+                            style={{ position: "absolute", bottom: "-20px", left: "50%", transform: "translateX(-50%)" }}
                           >
                             Download
                           </button>
@@ -135,6 +135,9 @@ const ImagesComponent = ({ imagesProp,flagStartUploadProps}) => {
           </div>
         </div>
       </div>
+      <button onClick={()=>console.log(imagesProp)}>
+        clikkk
+      </button>
     </div>
   );
 }

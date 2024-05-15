@@ -1,12 +1,17 @@
 import os
 import uuid
-
+import os
+import stat
+import datetime
+import time
+from utils.config import PATH_OF_SHARED_FOLDER
 class FolderManager:
     def __init__(self, base_path=None):
         if base_path is None:
-            self.base_path = "/home/mohd/Desktop/sharedFolder/DownloadedImages/"
+            self.base_path = PATH_OF_SHARED_FOLDER
         else:
             self.base_path = base_path
+        self.delete_time_for_content = 60 * 5
 
     def create_folder_with_uuid(self, folder_uuid=None):
         if folder_uuid is None:
@@ -31,8 +36,7 @@ class FolderManager:
         else:
             print("Folder does not exist.")
 
-    def _delete_folder_recursive(self, folder_name):
-        folder_path = os.path.join(self.base_path, folder_name)
+    def _delete_folder_recursive(self, folder_path):
         print(folder_path)
         if os.path.exists(folder_path):
             for root, dirs, files in os.walk(folder_path, topdown=False):
@@ -44,8 +48,9 @@ class FolderManager:
             print("Folder deleted successfully.")
         else:
             print("Folder does not exist.")
-
+    
     def list_folders(self):
+
         folders = []
         for entry in os.listdir(self.base_path):
             entry_path = os.path.join(self.base_path, entry)
@@ -53,11 +58,56 @@ class FolderManager:
                 folders.append(entry)
         return folders
     
-import netifaces as ni
+    # consider if the folder is being modified as well not implemented rn 
+    def clean_downloaded_images_folder(self):
+        path = self.base_path
+    
+        # Check if the path is a directory
+        if not os.path.isdir(path):
+            print("Invalid directory path.")
+            return
+    
+        # Iterate through the files and folders
+        for item in os.listdir(path):
+            # Join the item with the path to get the full path
+            full_path = os.path.join(path, item)
+    
+            # Get metadata
+            metadata = os.stat(full_path)
+    
+            # Check if it's a directory
+            if os.path.isdir(full_path):
+                # Check last access time of the folder
+                last_access_time = os.path.getatime(full_path)
+                current_time = time.time()
+                time_difference = current_time - last_access_time
+
+                if time_difference > self.delete_time_for_content:  
+                    self._delete_folder_recursive(full_path)
+                    print("Folder deleted due to inactivity.")
+                else:
+                    print("Folder has been accessed recently, not deleting.")
+
+            else:
+                # no deletion for files for now 
+                print("File:", item)
+                print("Size:", metadata.st_size, "bytes")
+                print("Last Modified:", datetime.datetime.fromtimestamp(metadata.st_mtime))
+                print("Permissions:", oct(stat.S_IMODE(metadata.st_mode)))
+
+            print("----------")
+            print("----------")
+
+    def temp(self):
+        print("hasfadsf")
+        
+    
+    
+
 
 class FolderNavigator:
     def __init__(self):
-        self.another_path = '/home/mohd/Desktop/sharedFolder/DownloadedImages/'
+        self.another_path = PATH_OF_SHARED_FOLDER
 
     def navigate_to_folder(self, folder_name):
         folder_path = os.path.join(self.current_path, folder_name)

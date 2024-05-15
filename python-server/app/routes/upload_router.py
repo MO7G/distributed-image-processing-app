@@ -1,5 +1,5 @@
 from flask import Blueprint
-from controller.upload_controller import upload_file, hello
+from controller.upload_controller import upload_file
 
 # Define a Blueprint for the routes
 upload_controller_bp = Blueprint('routes', __name__)

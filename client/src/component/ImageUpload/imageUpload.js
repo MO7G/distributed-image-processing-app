@@ -93,6 +93,7 @@ const ImageUpload = () => {
           });
   
           setImage(updatedImages);
+          console.log("haosf" , updatedImages)
         }
         setFlagStartUpload(false);
         setClearActive(true) // Set flag to false in the then block
