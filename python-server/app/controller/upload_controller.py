@@ -8,8 +8,10 @@ from utils.folder_manager import FolderManager
 from scripts.python_subprocess import run_command_with_subprocess
 from utils.s3_manager import S3FileManager
 from utils.folder_manager import FolderNavigator
+from utils.custom_logger import CustomLogger
+import logging
+daily_cleanup_logger =  CustomLogger(log_file_path='app/logs/controller.log', print_to_terminal=False, log_level=logging.DEBUG)
 s3 = S3FileManager()
-
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
 def allowed_file(filename):
@@ -55,7 +57,7 @@ def upload_file():
         resp.status_code = 400
         return resp
     
-   
+    daily_cleanup_logger.info("got the images")
   
     files = request.files.getlist('files[]')
     errors = {}
